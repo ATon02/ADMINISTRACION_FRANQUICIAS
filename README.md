@@ -35,20 +35,21 @@ Una API reactiva construida con Spring WebFlux, Java 17 y MySQL para la persiste
         -p 8080:8080 franchises-management-app
 
 Modelos
-    Modelo de Franquicia
-
+    
+      Modelo de Franquicia
         {
             "name": "Franchise name" // String - No deben existir franquicias con el mismo nombre.
         }
-    Modelo de Sucursal
+      Modelo de Sucursal
         {
             "name": "Branch name",   // String
             "franchiseId": 1         // Long - Debe existir una franquicia con este ID.
         }
-    Modelo de Producto
+      Modelo de Producto
         {
             "name": "Product name",  // String
             "stock": 1,              // Long
             "branchId": 1            // Long - Debe existir una sucursal con este ID.
         }
+
 
