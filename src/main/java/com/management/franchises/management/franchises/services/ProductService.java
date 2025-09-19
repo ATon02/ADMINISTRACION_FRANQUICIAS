@@ -13,6 +13,8 @@ public interface ProductService {
     Mono<Void> delete(Long id);
     Mono<List<DTOBranchProduct>> getProductMaxStock(Long franchiseId);
     Mono<DTOProductResponse> updateName(Long id, String name);
+    Mono<DTOProductResponse> updateStock(Long id, Long stock);
+
 
 
 }

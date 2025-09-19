@@ -50,4 +50,10 @@ public class ProductController {
         return this.productService.updateName(id,name).map(dto -> new ResponseData<>(HttpStatus.OK, dto));
     }
 
+    @PatchMapping("/update-stock/{id}")
+    public Mono<ResponseData<DTOProductResponse>> updateStock(@PathVariable Long id, @RequestParam Long stock) {
+        return this.productService.updateStock(id,stock).map(dto -> new ResponseData<>(HttpStatus.OK, dto));
+    }
+
+
 }

@@ -109,4 +109,23 @@ public class ProductServiceImpl implements ProductService {
                 .collectList();
     }
 
+    @Override
+    public Mono<DTOProductResponse> updateStock(Long id, Long stock) {
+        if (id == null || id <= 0) {
+            return Mono.error(new NotValidFieldException("Product ID cannot be 0"));
+        }
+        if (stock == null || stock<= 0) {
+            return Mono.error(new NotValidFieldException("Stock cannot be 0"));
+        }
+
+        return this.productRepository.findById(id)
+                .flatMap(product -> {
+                    product.setStock(stock);
+                    return this.productRepository.save(product)
+                            .map(productMapper::toDto)
+                            .switchIfEmpty(Mono.error(new Exception("Product not updated")));
+                })
+                .switchIfEmpty(Mono.error(new NotFoundException("Product with id " + id + " not found")));
+    }
+
 }
