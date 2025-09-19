@@ -1,6 +1,7 @@
 package com.management.franchises.management.franchises.exceptions;
 
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
@@ -11,24 +12,30 @@ import reactor.core.publisher.Mono;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
-    @ExceptionHandler(Exception.class)
-    public Mono<ResponseError> handleException(Exception ex) {
-        return Mono.just(new ResponseError(HttpStatus.INTERNAL_SERVER_ERROR, ex.getMessage()));
-    }
 
-    @ExceptionHandler(IllegalStateException.class)
-    public Mono<ResponseError> handleException(IllegalStateException ex) {
-        return Mono.just(new ResponseError(HttpStatus.NOT_FOUND, ex.getMessage()));
+   @ExceptionHandler(NotValidFieldException.class)
+    public Mono<ResponseEntity<ResponseError>> handleNotValidFieldException(NotValidFieldException ex) {
+        ResponseError body = new ResponseError(HttpStatus.BAD_REQUEST, ex.getMessage());
+        return Mono.just(ResponseEntity.status(HttpStatus.BAD_REQUEST).body(body));
     }
 
     @ExceptionHandler(NotFoundException.class)
-    public Mono<ResponseError> handleNotFoundException(NotFoundException ex) {
-        return Mono.just(new ResponseError(HttpStatus.NOT_FOUND, ex.getMessage()));
+    public Mono<ResponseEntity<ResponseError>> handleNotFoundException(NotFoundException ex) {
+        ResponseError body = new ResponseError(HttpStatus.NOT_FOUND, ex.getMessage());
+        return Mono.just(ResponseEntity.status(HttpStatus.NOT_FOUND).body(body));
     }
 
-    @ExceptionHandler(NotValidFieldException.class)
-    public Mono<ResponseError> handleNotValidFieldException(NotValidFieldException ex) {
-        return Mono.just(new ResponseError(HttpStatus.BAD_REQUEST, ex.getMessage()));
+    @ExceptionHandler(Exception.class)
+    public Mono<ResponseEntity<ResponseError>> handleException(IllegalStateException ex) {
+        ResponseError body = new ResponseError(HttpStatus.NOT_FOUND, ex.getMessage());
+        return Mono.just(ResponseEntity.status(HttpStatus.NOT_FOUND).body(body));
     }
+
+    @ExceptionHandler(IllegalStateException.class)
+    public Mono<ResponseEntity<ResponseError>> handleException(Exception ex) {
+        ResponseError body = new ResponseError(HttpStatus.INTERNAL_SERVER_ERROR, ex.getMessage());
+        return Mono.just(ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(body));
+    }
+
 
 }
