@@ -1,32 +1,54 @@
-This projects was developed with spring-webflux, using persistence in MySql and languaje of programing Java 17.
-Steps to run from the code editor
-    1. Create schema "management" in MySQL, in te host "localhost:3306"
+# Franchises Management API
 
+Una API reactiva construida con Spring WebFlux, Java 17 y MySQL para la persistencia. Este proyecto permite gestionar franquicias, sucursales y productos, y puede ser desplegado localmente o utilizando Docker.
 
-Also, docker was used to perform containerized deployment in a local environment.
-Steps for deploy with Docker:
-    1. Excute:  mvn clean install -DskipTests     //Generate jar
-    2. Execute: docker-compose build    //Build image
-    3. Execute: docker-compose up db    //Run container db MySQL
-    4. Execute:  docker-compose up java_app    //Run container java project
+## Requisitos
 
-Note: The machine on which it is deployed must be running docker 
+- **Java 17**
+- **Maven 3.x**
+- **MySQL 8.x** (o compatible)
+- **Docker** (opcional, para despliegue en contenedores)
 
+### Configuración de la base de datos
 
-MODEL FRANCHISE
-    {
-        "name":"Franchise name"   //String - There should be not more franchises with this name.
-    }
+1. Crear un esquema llamado `franchises_management` en MySQL.
+2. Declarar las siguientes variables de entorno:
+   - `SPRING_R2DBC_URL`: La URL de conexión R2DBC para MySQL.
+   - `SPRING_R2DBC_USERNAME`: Nombre de usuario de la base de datos.
+   - `SPRING_R2DBC_PASSWORD`: Contraseña de la base de datos.
 
-MODEL BRANCH
-    {
-        "name":"Branch name"   //String
-        "franchiseId": 1    //Long - There must be a franchise with this id
-    }
+---
 
-MODEL PRODUCT
-    {
-        "name":"Branch name"    //String
-        "stock":1   //Long
-        "branchId": 1    //Long - There must be a branch with this id
-    }
+## Pasos para el despliegue con Docker
+
+1. Generar el archivo JAR del proyecto:
+   ```bash
+   mvn clean install -DskipTests
+   ```
+2. Construir la imagen de Docker:
+    docker build -t franchises-management-app .
+3. Ejecutar el contenedor de la aplicación:
+    docker run --name franchises-app \
+        -e SPRING_R2DBC_URL=r2dbc:mysql://<HOST_MYSQL>:3306/franchises_management \
+        -e SPRING_R2DBC_USERNAME=<USUARIO_MYSQL> \
+        -e SPRING_R2DBC_PASSWORD=<CONTRASEÑA_MYSQL> \
+        -p 8080:8080 franchises-management-app
+
+Modelos
+    Modelo de Franquicia
+
+        {
+            "name": "Franchise name" // String - No deben existir franquicias con el mismo nombre.
+        }
+    Modelo de Sucursal
+        {
+            "name": "Branch name",   // String
+            "franchiseId": 1         // Long - Debe existir una franquicia con este ID.
+        }
+    Modelo de Producto
+        {
+            "name": "Product name",  // String
+            "stock": 1,              // Long
+            "branchId": 1            // Long - Debe existir una sucursal con este ID.
+        }
+
