@@ -1,7 +1,10 @@
 package co.com.prueba.r2dbc.adapter;
 
+import co.com.prueba.model.branchproduct.BranchProduct;
+import co.com.prueba.model.branchproduct.gateways.BranchProductRepository;
 import co.com.prueba.model.product.Product;
 import co.com.prueba.model.product.gateways.ProductRepository;
+
 import co.com.prueba.r2dbc.entity.ProductEntity;
 import co.com.prueba.r2dbc.helper.ReactiveAdapterOperations;
 import co.com.prueba.r2dbc.repository.ProductReactiveRepository;
@@ -17,7 +20,7 @@ public class ProductReactiveRepositoryAdapter extends ReactiveAdapterOperations<
     ProductEntity,
     Long,
     ProductReactiveRepository
-> implements ProductRepository {
+> implements ProductRepository, BranchProductRepository {
     
     public ProductReactiveRepositoryAdapter(ProductReactiveRepository repository, ObjectMapper mapper) {
         /**
@@ -38,6 +41,17 @@ public class ProductReactiveRepositoryAdapter extends ReactiveAdapterOperations<
     public Mono<Product> findProductWithMaxStockByBranchId(Long branchId) {
         return repository.findProductWithMaxStockByBranchId(branchId)
                 .map(this::toEntity);
+    }
+
+    @Override
+    public Flux<BranchProduct> findProductsWithMaxStockByFranchiseId(Long franchiseId) {
+        return repository.findProductsWithMaxStockByFranchiseId(franchiseId)
+                .map(dto -> new BranchProduct(
+                        dto.getBranchName(),
+                        dto.getProductId(),
+                        dto.getProductName(),
+                        dto.getProductStock()
+                ));
     }
 
     @Override

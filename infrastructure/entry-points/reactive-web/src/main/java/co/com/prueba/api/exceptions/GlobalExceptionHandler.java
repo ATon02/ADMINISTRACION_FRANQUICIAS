@@ -6,15 +6,16 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import co.com.prueba.api.dtos.response.ResponseError;
-import co.com.prueba.usecase.exceptions.NotValidFieldException;
-import co.com.prueba.usecase.exceptions.NotFoundException;
+import co.com.prueba.usecase.exceptions.BusinessException;
+import co.com.prueba.usecase.exceptions.TechnicalException;
+import jakarta.validation.ConstraintViolationException;
 import reactor.core.publisher.Mono;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
-    @ExceptionHandler(NotValidFieldException.class)
-    public Mono<ResponseEntity<ResponseError>> handleNotValidFieldException(NotValidFieldException ex) {
+    @ExceptionHandler(BusinessException.class)
+    public Mono<ResponseEntity<ResponseError>> handleBusinessException(BusinessException ex) {
         ResponseError body = ResponseError.builder()
                 .code(HttpStatus.BAD_REQUEST.value())
                 .error(HttpStatus.BAD_REQUEST.name())
@@ -23,8 +24,28 @@ public class GlobalExceptionHandler {
         return Mono.just(ResponseEntity.status(HttpStatus.BAD_REQUEST).body(body));
     }
 
-    @ExceptionHandler(NotFoundException.class)
-    public Mono<ResponseEntity<ResponseError>> handleNotFoundException(NotFoundException ex) {
+    @ExceptionHandler(TechnicalException.class)
+    public Mono<ResponseEntity<ResponseError>> handleTechnicalException(TechnicalException ex) {
+        ResponseError body = ResponseError.builder()
+                .code(HttpStatus.INTERNAL_SERVER_ERROR.value())
+                .error(HttpStatus.INTERNAL_SERVER_ERROR.name())
+                .detail(ex.getMessage())
+                .build();
+        return Mono.just(ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(body));
+    }
+
+    @ExceptionHandler(NotValidFieldExceptionGlobal.class)
+    public Mono<ResponseEntity<ResponseError>> handleNotValidFieldExceptionGlobal(NotValidFieldExceptionGlobal ex) {
+        ResponseError body = ResponseError.builder()
+                .code(HttpStatus.BAD_REQUEST.value())
+                .error(HttpStatus.BAD_REQUEST.name())
+                .detail(ex.getMessage())
+                .build();
+        return Mono.just(ResponseEntity.status(HttpStatus.BAD_REQUEST).body(body));
+    }
+
+    @ExceptionHandler(NotFoundExceptionGlobal.class)
+    public Mono<ResponseEntity<ResponseError>> handleNotFoundExceptionGlobal(NotFoundExceptionGlobal ex) {
         ResponseError body = ResponseError.builder()
                 .code(HttpStatus.NOT_FOUND.value())
                 .error(HttpStatus.NOT_FOUND.name())
@@ -35,6 +56,16 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(IllegalStateException.class)
     public Mono<ResponseEntity<ResponseError>> handleIllegalStateException(IllegalStateException ex) {
+        ResponseError body = ResponseError.builder()
+                .code(HttpStatus.BAD_REQUEST.value())
+                .error(HttpStatus.BAD_REQUEST.name())
+                .detail(ex.getMessage())
+                .build();
+        return Mono.just(ResponseEntity.status(HttpStatus.BAD_REQUEST).body(body));
+    }
+
+    @ExceptionHandler(ConstraintViolationException.class)
+    public Mono<ResponseEntity<ResponseError>> handleConstraintViolationException(ConstraintViolationException ex) {
         ResponseError body = ResponseError.builder()
                 .code(HttpStatus.BAD_REQUEST.value())
                 .error(HttpStatus.BAD_REQUEST.name())

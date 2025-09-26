@@ -1,5 +1,4 @@
-package co.com.prueba.usecase.dtos;
-
+package co.com.prueba.model.branchproduct;
 import lombok.Builder;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -11,10 +10,9 @@ import lombok.Setter;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder(toBuilder = true)
-public class DTOBranchProduct {
-
+public class BranchProduct {
     private String branchName;
-    private DTOProductResponse product;
-
-    
+    private Long productId;
+    private String productName;
+    private Long productStock;
 }

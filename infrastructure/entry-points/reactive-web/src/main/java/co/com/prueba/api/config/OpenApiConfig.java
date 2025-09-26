@@ -27,11 +27,11 @@ import org.springframework.context.annotation.Primary;
 
 import co.com.prueba.api.dtos.request.DTOFranchise;
 import co.com.prueba.api.dtos.response.DTOFranchiseResponse;
+import co.com.prueba.api.dtos.response.DTOProductResponse;
 import co.com.prueba.api.dtos.request.DTOBranch;
 import co.com.prueba.api.dtos.response.DTOBranchResponse;
 import co.com.prueba.api.dtos.request.DTOProduct;
-import co.com.prueba.usecase.dtos.DTOProductResponse;
-import co.com.prueba.usecase.dtos.DTOBranchProduct;
+import co.com.prueba.model.branchproduct.BranchProduct;
 
 @Configuration
 public class OpenApiConfig {
@@ -225,7 +225,7 @@ public class OpenApiConfig {
                                                             new io.swagger.v3.oas.models.media.MediaType()
                                                                     .schema(new ArraySchema()
                                                                             .items(new Schema<>().$ref(
-                                                                                    "#/components/schemas/DTOBranchProduct"))))))
+                                                                                    "#/components/schemas/BranchProduct"))))))
                                     .addApiResponse("404", new ApiResponse()
                                             .description("Franquicia no encontrada"))));
 
@@ -341,12 +341,21 @@ public class OpenApiConfig {
                             .addProperty("stock", new IntegerSchema().format("int64")
                                     .description("Cantidad en stock del producto")
                                     .example(100L)))
-                    .addSchemas("DTOBranchProduct", new Schema<DTOBranchProduct>()
+                    .addSchemas("BranchProduct", new Schema<BranchProduct>()
+                            .description("Modelo de dominio que representa un producto con mayor stock en una sucursal específica. " +
+                                       "Optimizado para consultas reactivas con JOIN desde la base de datos")
                             .addProperty("branchName", new StringSchema()
                                     .description("Nombre de la sucursal")
                                     .example("Sucursal Centro"))
-                            .addProperty("product", new Schema<>().$ref("#/components/schemas/DTOProductResponse")
-                                    .description("Producto con mayor stock de la sucursal")));
+                            .addProperty("productId", new IntegerSchema().format("int64")
+                                    .description("ID único del producto")
+                                    .example(1L))
+                            .addProperty("productName", new StringSchema()
+                                    .description("Nombre del producto")
+                                    .example("Big Mac"))
+                            .addProperty("productStock", new IntegerSchema().format("int64")
+                                    .description("Cantidad en stock del producto")
+                                    .example(100L)));
         };
     }
 

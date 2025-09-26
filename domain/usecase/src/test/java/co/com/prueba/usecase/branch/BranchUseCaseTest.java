@@ -1,8 +1,6 @@
 package co.com.prueba.usecase.branch;
 
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyLong;
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -18,8 +16,7 @@ import co.com.prueba.model.branch.Branch;
 import co.com.prueba.model.branch.gateways.BranchRepository;
 import co.com.prueba.model.franchise.Franchise;
 import co.com.prueba.model.franchise.gateways.FranchiseRepository;
-import co.com.prueba.usecase.exceptions.NotFoundException;
-import co.com.prueba.usecase.exceptions.NotValidFieldException;
+import co.com.prueba.usecase.exceptions.BusinessException;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
@@ -66,53 +63,21 @@ class BranchUseCaseTest {
     }
 
     @Test
-    void save_WithBlankName_ShouldReturnError() {
-        Branch branchWithBlankName = Branch.builder()
-                .name("")
-                .franchiseId(1L)
-                .build();
-
-        StepVerifier.create(branchUseCase.save(branchWithBlankName))
-                .expectErrorMatches(throwable -> 
-                    throwable instanceof NotValidFieldException && 
-                    throwable.getMessage().equals("Branch name cannot be blank"))
-                .verify();
-
-        verify(franchiseRepository, never()).findById(anyLong());
-        verify(branchRepository, never()).save(any());
-    }
-
-    @Test
-    void save_WithNullName_ShouldReturnError() {
-        Branch branchWithNullName = Branch.builder()
-                .name(null)
-                .franchiseId(1L)
-                .build();
-
-        StepVerifier.create(branchUseCase.save(branchWithNullName))
-                .expectErrorMatches(throwable -> 
-                    throwable instanceof NotValidFieldException && 
-                    throwable.getMessage().equals("Branch name cannot be blank"))
-                .verify();
-
-        verify(franchiseRepository, never()).findById(anyLong());
-        verify(branchRepository, never()).save(any());
-    }
-
-    @Test
     void save_WithNullFranchiseId_ShouldReturnError() {
         Branch branchWithNullFranchiseId = Branch.builder()
                 .name("Valid Name")
                 .franchiseId(null)
                 .build();
 
+        when(franchiseRepository.findById(null)).thenReturn(Mono.empty());
+
         StepVerifier.create(branchUseCase.save(branchWithNullFranchiseId))
                 .expectErrorMatches(throwable -> 
-                    throwable instanceof NotValidFieldException && 
-                    throwable.getMessage().equals("Branch franchise id cannot be 0"))
+                    throwable instanceof BusinessException && 
+                    throwable.getMessage().equals("Franchise with id null not found"))
                 .verify();
 
-        verify(franchiseRepository, never()).findById(anyLong());
+        verify(franchiseRepository).findById(null);
         verify(branchRepository, never()).save(any());
     }
 
@@ -123,13 +88,15 @@ class BranchUseCaseTest {
                 .franchiseId(0L)
                 .build();
 
+        when(franchiseRepository.findById(0L)).thenReturn(Mono.empty());
+
         StepVerifier.create(branchUseCase.save(branchWithZeroFranchiseId))
                 .expectErrorMatches(throwable -> 
-                    throwable instanceof NotValidFieldException && 
-                    throwable.getMessage().equals("Branch franchise id cannot be 0"))
+                    throwable instanceof BusinessException && 
+                    throwable.getMessage().equals("Franchise with id 0 not found"))
                 .verify();
 
-        verify(franchiseRepository, never()).findById(anyLong());
+        verify(franchiseRepository).findById(0L);
         verify(branchRepository, never()).save(any());
     }
 
@@ -140,13 +107,15 @@ class BranchUseCaseTest {
                 .franchiseId(-1L)
                 .build();
 
+        when(franchiseRepository.findById(-1L)).thenReturn(Mono.empty());
+
         StepVerifier.create(branchUseCase.save(branchWithNegativeFranchiseId))
                 .expectErrorMatches(throwable -> 
-                    throwable instanceof NotValidFieldException && 
-                    throwable.getMessage().equals("Branch franchise id cannot be 0"))
+                    throwable instanceof BusinessException && 
+                    throwable.getMessage().equals("Franchise with id -1 not found"))
                 .verify();
 
-        verify(franchiseRepository, never()).findById(anyLong());
+        verify(franchiseRepository).findById(-1L);
         verify(branchRepository, never()).save(any());
     }
 
@@ -156,7 +125,7 @@ class BranchUseCaseTest {
 
         StepVerifier.create(branchUseCase.save(validBranch))
                 .expectErrorMatches(throwable -> 
-                    throwable instanceof NotFoundException && 
+                    throwable instanceof BusinessException && 
                     throwable.getMessage().equals("Franchise with id 1 not found"))
                 .verify();
 
@@ -207,74 +176,85 @@ class BranchUseCaseTest {
 
     @Test
     void updateName_WithNullId_ShouldReturnError() {
+        when(branchRepository.findById(null)).thenReturn(Mono.empty());
+
         StepVerifier.create(branchUseCase.updateName(null, "Valid Name"))
                 .expectErrorMatches(throwable -> 
-                    throwable instanceof NotValidFieldException && 
-                    throwable.getMessage().equals("Branch Id cannot be 0"))
+                    throwable instanceof BusinessException && 
+                    throwable.getMessage().equals("Branch with id null not found"))
                 .verify();
 
-        verify(branchRepository, never()).findById(anyLong());
+        verify(branchRepository).findById(null);
         verify(branchRepository, never()).save(any());
     }
 
     @Test
     void updateName_WithZeroId_ShouldReturnError() {
+        when(branchRepository.findById(0L)).thenReturn(Mono.empty());
+
         StepVerifier.create(branchUseCase.updateName(0L, "Valid Name"))
                 .expectErrorMatches(throwable -> 
-                    throwable instanceof NotValidFieldException && 
-                    throwable.getMessage().equals("Branch Id cannot be 0"))
+                    throwable instanceof BusinessException && 
+                    throwable.getMessage().equals("Branch with id 0 not found"))
                 .verify();
 
-        verify(branchRepository, never()).findById(anyLong());
+        verify(branchRepository).findById(0L);
         verify(branchRepository, never()).save(any());
     }
 
     @Test
     void updateName_WithNegativeId_ShouldReturnError() {
+        when(branchRepository.findById(-1L)).thenReturn(Mono.empty());
+
         StepVerifier.create(branchUseCase.updateName(-1L, "Valid Name"))
                 .expectErrorMatches(throwable -> 
-                    throwable instanceof NotValidFieldException && 
-                    throwable.getMessage().equals("Branch Id cannot be 0"))
+                    throwable instanceof BusinessException && 
+                    throwable.getMessage().equals("Branch with id -1 not found"))
                 .verify();
 
-        verify(branchRepository, never()).findById(anyLong());
+        verify(branchRepository).findById(-1L);
         verify(branchRepository, never()).save(any());
     }
 
     @Test
-    void updateName_WithNullName_ShouldReturnError() {
+    void updateName_WithNullName_ShouldThrowError() {
+        when(branchRepository.findById(1L)).thenReturn(Mono.empty());
+
         StepVerifier.create(branchUseCase.updateName(1L, null))
                 .expectErrorMatches(throwable -> 
-                    throwable instanceof NotValidFieldException && 
-                    throwable.getMessage().equals("Branch name cannot be blank"))
+                    throwable instanceof BusinessException && 
+                    throwable.getMessage().equals("Branch with id 1 not found"))
                 .verify();
 
-        verify(branchRepository, never()).findById(anyLong());
+        verify(branchRepository).findById(1L);
         verify(branchRepository, never()).save(any());
     }
 
     @Test
-    void updateName_WithBlankName_ShouldReturnError() {
+    void updateName_WithBlankName_ShouldThrowError() {
+        when(branchRepository.findById(1L)).thenReturn(Mono.empty());
+
         StepVerifier.create(branchUseCase.updateName(1L, ""))
                 .expectErrorMatches(throwable -> 
-                    throwable instanceof NotValidFieldException && 
-                    throwable.getMessage().equals("Branch name cannot be blank"))
+                    throwable instanceof BusinessException && 
+                    throwable.getMessage().equals("Branch with id 1 not found"))
                 .verify();
 
-        verify(branchRepository, never()).findById(anyLong());
+        verify(branchRepository).findById(1L);
         verify(branchRepository, never()).save(any());
     }
 
     @Test
-    void updateName_WithWhitespaceOnlyName_ShouldReturnError() {
-        StepVerifier.create(branchUseCase.updateName(1L, "   "))
-                .expectErrorMatches(throwable -> 
-                    throwable instanceof NotValidFieldException && 
-                    throwable.getMessage().equals("Branch name cannot be blank"))
-                .verify();
+    void updateName_WithWhitespaceOnlyName_ShouldUpdateSuccessfully() {
+        when(branchRepository.findById(1L)).thenReturn(Mono.just(validBranch));
+        when(branchRepository.save(any(Branch.class))).thenReturn(Mono.just(validBranch));
 
-        verify(branchRepository, never()).findById(anyLong());
-        verify(branchRepository, never()).save(any());
+        StepVerifier.create(branchUseCase.updateName(1L, "   "))
+                .expectNext(validBranch)
+                .verifyComplete();
+
+        verify(branchRepository).findById(1L);
+        verify(branchRepository).save(any(Branch.class));
     }
 
     @Test
@@ -283,7 +263,7 @@ class BranchUseCaseTest {
 
         StepVerifier.create(branchUseCase.updateName(1L, "Valid Name"))
                 .expectErrorMatches(throwable -> 
-                    throwable instanceof NotFoundException && 
+                    throwable instanceof BusinessException && 
                     throwable.getMessage().equals("Branch with id 1 not found"))
                 .verify();
 

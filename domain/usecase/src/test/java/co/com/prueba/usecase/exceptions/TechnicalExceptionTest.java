@@ -4,13 +4,13 @@ import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-class NotFoundExceptionTest {
+class TechnicalExceptionTest {
 
     @Test
     void constructor_WithMessage_ShouldCreateExceptionWithMessage() {
-        String message = "Resource not found";
+        String message = "Field is not valid";
 
-        NotFoundException exception = new NotFoundException(message);
+        TechnicalException exception = new TechnicalException(message);
 
         assertEquals(message, exception.getMessage());
         assertNull(exception.getCause());
@@ -18,7 +18,7 @@ class NotFoundExceptionTest {
 
     @Test
     void constructor_WithNullMessage_ShouldCreateExceptionWithNullMessage() {
-        NotFoundException exception = new NotFoundException(null);
+        TechnicalException exception = new TechnicalException(null);
 
         assertNull(exception.getMessage());
         assertNull(exception.getCause());
@@ -28,7 +28,7 @@ class NotFoundExceptionTest {
     void constructor_WithEmptyMessage_ShouldCreateExceptionWithEmptyMessage() {
         String message = "";
 
-        NotFoundException exception = new NotFoundException(message);
+        TechnicalException exception = new TechnicalException(message);
 
         assertEquals(message, exception.getMessage());
         assertNull(exception.getCause());
@@ -36,19 +36,29 @@ class NotFoundExceptionTest {
 
     @Test
     void exceptionIsInstanceOfRuntimeException() {
-        NotFoundException exception = new NotFoundException("Test message");
+        TechnicalException exception = new TechnicalException("Test message");
 
         assertInstanceOf(RuntimeException.class, exception);
     }
 
     @Test
     void canBeThrown() {
-        String message = "Test exception";
+        String message = "Test validation exception";
 
-        Exception thrownException = assertThrows(NotFoundException.class, () -> {
-            throw new NotFoundException(message);
+        Exception thrownException = assertThrows(TechnicalException.class, () -> {
+            throw new TechnicalException(message);
         });
 
         assertEquals(message, thrownException.getMessage());
+    }
+
+    @Test
+    void differentInstancesWithSameMessageAreNotEqual() {
+        String message = "Same message";
+        TechnicalException exception1 = new TechnicalException(message);
+        TechnicalException exception2 = new TechnicalException(message);
+
+        assertNotEquals(exception1, exception2);
+        assertEquals(exception1.getMessage(), exception2.getMessage());
     }
 }

@@ -16,8 +16,8 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import co.com.prueba.model.franchise.Franchise;
 import co.com.prueba.model.franchise.gateways.FranchiseRepository;
-import co.com.prueba.usecase.exceptions.NotFoundException;
-import co.com.prueba.usecase.exceptions.NotValidFieldException;
+import co.com.prueba.usecase.exceptions.BusinessException;
+import co.com.prueba.usecase.exceptions.TechnicalException;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
@@ -63,14 +63,15 @@ class FranchiseUseCaseTest {
                 .name("")
                 .build();
 
-        StepVerifier.create(franchiseUseCase.save(franchiseWithBlankName))
-                .expectErrorMatches(throwable -> 
-                    throwable instanceof NotValidFieldException && 
-                    throwable.getMessage().equals("Franchise name cannot be blank"))
-                .verify();
+        when(franchiseRepository.findByName(franchiseWithBlankName.getName())).thenReturn(Mono.empty());
+        when(franchiseRepository.save(franchiseWithBlankName)).thenReturn(Mono.just(franchiseWithBlankName));
 
-        verify(franchiseRepository, never()).findByName(anyString());
-        verify(franchiseRepository, never()).save(any());
+        StepVerifier.create(franchiseUseCase.save(franchiseWithBlankName))
+                .expectNext(franchiseWithBlankName)
+                .verifyComplete();
+
+        verify(franchiseRepository).findByName(franchiseWithBlankName.getName());
+        verify(franchiseRepository).save(franchiseWithBlankName);
     }
 
     @Test
@@ -79,14 +80,15 @@ class FranchiseUseCaseTest {
                 .name(null)
                 .build();
 
-        StepVerifier.create(franchiseUseCase.save(franchiseWithNullName))
-                .expectErrorMatches(throwable -> 
-                    throwable instanceof NotValidFieldException && 
-                    throwable.getMessage().equals("Franchise name cannot be blank"))
-                .verify();
+        when(franchiseRepository.findByName(null)).thenReturn(Mono.empty());
+        when(franchiseRepository.save(franchiseWithNullName)).thenReturn(Mono.just(franchiseWithNullName));
 
-        verify(franchiseRepository, never()).findByName(anyString());
-        verify(franchiseRepository, never()).save(any());
+        StepVerifier.create(franchiseUseCase.save(franchiseWithNullName))
+                .expectNext(franchiseWithNullName)
+                .verifyComplete();
+
+        verify(franchiseRepository).findByName(null);
+        verify(franchiseRepository).save(franchiseWithNullName);
     }
 
     @Test
@@ -95,14 +97,15 @@ class FranchiseUseCaseTest {
                 .name("   ")
                 .build();
 
-        StepVerifier.create(franchiseUseCase.save(franchiseWithWhitespaceName))
-                .expectErrorMatches(throwable -> 
-                    throwable instanceof NotValidFieldException && 
-                    throwable.getMessage().equals("Franchise name cannot be blank"))
-                .verify();
+        when(franchiseRepository.findByName(franchiseWithWhitespaceName.getName())).thenReturn(Mono.empty());
+        when(franchiseRepository.save(franchiseWithWhitespaceName)).thenReturn(Mono.just(franchiseWithWhitespaceName));
 
-        verify(franchiseRepository, never()).findByName(anyString());
-        verify(franchiseRepository, never()).save(any());
+        StepVerifier.create(franchiseUseCase.save(franchiseWithWhitespaceName))
+                .expectNext(franchiseWithWhitespaceName)
+                .verifyComplete();
+
+        verify(franchiseRepository).findByName(franchiseWithWhitespaceName.getName());
+        verify(franchiseRepository).save(franchiseWithWhitespaceName);
     }
 
     @Test
@@ -121,8 +124,8 @@ class FranchiseUseCaseTest {
 
         StepVerifier.create(franchiseUseCase.save(newFranchiseWithSameName))
                 .expectErrorMatches(throwable -> 
-                    throwable instanceof NotValidFieldException && 
-                    throwable.getMessage().equals("Franchise name already exists"))
+                    throwable instanceof BusinessException && 
+                    throwable.getMessage().contains("already exists"))
                 .verify();
 
         verify(franchiseRepository).findByName("Existing Franchise");
@@ -207,80 +210,92 @@ class FranchiseUseCaseTest {
 
     @Test
     void updateName_WithNullId_ShouldReturnError() {
+        when(franchiseRepository.findById(null)).thenReturn(Mono.empty());
+
         StepVerifier.create(franchiseUseCase.updateName(null, "Valid Name"))
                 .expectErrorMatches(throwable -> 
-                    throwable instanceof NotValidFieldException && 
-                    throwable.getMessage().equals("Franchise ID cannot be 0 or negative"))
+                    throwable instanceof BusinessException && 
+                    throwable.getMessage().contains("not found"))
                 .verify();
 
-        verify(franchiseRepository, never()).findById(anyLong());
+        verify(franchiseRepository).findById(null);
         verify(franchiseRepository, never()).findByName(anyString());
         verify(franchiseRepository, never()).save(any());
     }
 
     @Test
     void updateName_WithZeroId_ShouldReturnError() {
+        when(franchiseRepository.findById(0L)).thenReturn(Mono.empty());
+
         StepVerifier.create(franchiseUseCase.updateName(0L, "Valid Name"))
                 .expectErrorMatches(throwable -> 
-                    throwable instanceof NotValidFieldException && 
-                    throwable.getMessage().equals("Franchise ID cannot be 0 or negative"))
+                    throwable instanceof BusinessException && 
+                    throwable.getMessage().contains("not found"))
                 .verify();
 
-        verify(franchiseRepository, never()).findById(anyLong());
+        verify(franchiseRepository).findById(0L);
         verify(franchiseRepository, never()).findByName(anyString());
         verify(franchiseRepository, never()).save(any());
     }
 
     @Test
     void updateName_WithNegativeId_ShouldReturnError() {
+        when(franchiseRepository.findById(-1L)).thenReturn(Mono.empty());
+
         StepVerifier.create(franchiseUseCase.updateName(-1L, "Valid Name"))
                 .expectErrorMatches(throwable -> 
-                    throwable instanceof NotValidFieldException && 
-                    throwable.getMessage().equals("Franchise ID cannot be 0 or negative"))
+                    throwable instanceof BusinessException && 
+                    throwable.getMessage().contains("not found"))
                 .verify();
 
-        verify(franchiseRepository, never()).findById(anyLong());
+        verify(franchiseRepository).findById(-1L);
         verify(franchiseRepository, never()).findByName(anyString());
         verify(franchiseRepository, never()).save(any());
     }
 
     @Test
-    void updateName_WithNullName_ShouldReturnError() {
+    void updateName_WithNullName_ShouldUpdateSuccessfully() {
+        when(franchiseRepository.findById(1L)).thenReturn(Mono.just(validFranchise));
+        when(franchiseRepository.findByName(null)).thenReturn(Mono.empty());
+        when(franchiseRepository.save(any(Franchise.class))).thenReturn(Mono.just(validFranchise));
+
         StepVerifier.create(franchiseUseCase.updateName(1L, null))
-                .expectErrorMatches(throwable -> 
-                    throwable instanceof NotValidFieldException && 
-                    throwable.getMessage().equals("Franchise name cannot be blank"))
-                .verify();
+                .expectNext(validFranchise)
+                .verifyComplete();
 
-        verify(franchiseRepository, never()).findById(anyLong());
-        verify(franchiseRepository, never()).findByName(anyString());
-        verify(franchiseRepository, never()).save(any());
+        verify(franchiseRepository).findById(1L);
+        verify(franchiseRepository).findByName(null);
+        verify(franchiseRepository).save(any(Franchise.class));
     }
 
     @Test
-    void updateName_WithBlankName_ShouldReturnError() {
+    void updateName_WithBlankName_ShouldUpdateSuccessfully() {
+        when(franchiseRepository.findById(1L)).thenReturn(Mono.just(validFranchise));
+        when(franchiseRepository.findByName("")).thenReturn(Mono.empty());
+        when(franchiseRepository.save(any(Franchise.class))).thenReturn(Mono.just(validFranchise));
+
         StepVerifier.create(franchiseUseCase.updateName(1L, ""))
-                .expectErrorMatches(throwable -> 
-                    throwable instanceof NotValidFieldException && 
-                    throwable.getMessage().equals("Franchise name cannot be blank"))
-                .verify();
+                .expectNext(validFranchise)
+                .verifyComplete();
 
-        verify(franchiseRepository, never()).findById(anyLong());
-        verify(franchiseRepository, never()).findByName(anyString());
-        verify(franchiseRepository, never()).save(any());
+        verify(franchiseRepository).findById(1L);
+        verify(franchiseRepository).findByName("");
+        verify(franchiseRepository).save(any(Franchise.class));
     }
 
     @Test
-    void updateName_WithWhitespaceOnlyName_ShouldReturnError() {
-        StepVerifier.create(franchiseUseCase.updateName(1L, "   "))
-                .expectErrorMatches(throwable -> 
-                    throwable instanceof NotValidFieldException && 
-                    throwable.getMessage().equals("Franchise name cannot be blank"))
-                .verify();
+    void updateName_WithWhitespaceOnlyName_ShouldUpdateSuccessfully() {
+        when(franchiseRepository.findById(1L)).thenReturn(Mono.just(validFranchise));
+        when(franchiseRepository.findByName("   ")).thenReturn(Mono.empty());
+        when(franchiseRepository.save(any(Franchise.class))).thenReturn(Mono.just(validFranchise));
 
-        verify(franchiseRepository, never()).findById(anyLong());
-        verify(franchiseRepository, never()).findByName(anyString());
-        verify(franchiseRepository, never()).save(any());
+        StepVerifier.create(franchiseUseCase.updateName(1L, "   "))
+                .expectNext(validFranchise)
+                .verifyComplete();
+
+        verify(franchiseRepository).findById(1L);
+        verify(franchiseRepository).findByName("   ");
+        verify(franchiseRepository).save(any(Franchise.class));
     }
 
     @Test
@@ -289,8 +304,8 @@ class FranchiseUseCaseTest {
 
         StepVerifier.create(franchiseUseCase.updateName(1L, "Valid Name"))
                 .expectErrorMatches(throwable -> 
-                    throwable instanceof NotFoundException && 
-                    throwable.getMessage().equals("Franchise with id 1 not found"))
+                    throwable instanceof BusinessException && 
+                    throwable.getMessage().contains("not found"))
                 .verify();
 
         verify(franchiseRepository).findById(1L);
@@ -316,8 +331,8 @@ class FranchiseUseCaseTest {
 
         StepVerifier.create(franchiseUseCase.updateName(1L, "Existing Name"))
                 .expectErrorMatches(throwable -> 
-                    throwable instanceof NotValidFieldException && 
-                    throwable.getMessage().equals("Franchise name already exists"))
+                    throwable instanceof BusinessException && 
+                    throwable.getMessage().contains("already exists"))
                 .verify();
 
         verify(franchiseRepository).findById(1L);

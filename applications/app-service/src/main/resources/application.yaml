@@ -1,5 +1,5 @@
 server:
-  port: 8080
+  port: 8085
 spring:
   application:
     name: "nequi"
@@ -12,9 +12,9 @@ spring:
   profiles:
     include: null
   r2dbc:
-    url: "${SPRING_R2DBC_URL}"
-    username: ${SPRING_R2DBC_USERNAME}
-    password: "${SPRING_R2DBC_PASSWORD}"
+    url: "r2dbc:postgresql://localhost:5433/administracion_franquicias"
+    username: "aton"
+    password: "aton123"
 management:
   endpoints:
     web:
